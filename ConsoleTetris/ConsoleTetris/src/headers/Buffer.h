@@ -1,31 +1,46 @@
 #pragma once
 
+#include <Pair.h>
 #include <interfaces/IDrawable.h>
+#include <interfaces/IElement.h>
 
 #include <Windows.h>
 
 class Buffer : IDrawable
 {
 public:
+	const wchar_t FILLING_SYMBOL = 0x2588;
+public:
 	Buffer(int w, int h) :
 		m_width(w)
 		, m_height(h)
 	{
-		hStdout = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+		m_bounds = types::Rectangle 
+			{
+			Pair<int, int>{m_BORDERWIDTH.x, 0}
+			, Pair<int, int>{m_width - m_BORDERWIDTH.x, m_height - m_BORDERWIDTH.y}
+			};
+		hStdout = CreateConsoleScreenBuffer(
+			GENERIC_READ | GENERIC_WRITE
+			, 0
+			, NULL
+			, CONSOLE_TEXTMODE_BUFFER
+			, NULL);
 		SetConsoleActiveScreenBuffer(hStdout);
-		m_buffer = new wchar_t[m_width * m_height];
+		m_buffer = new wchar_t[m_width * m_height + 1];
 	}
 	~Buffer() { delete[] m_buffer; }
 
 	virtual void Draw() override
 	{
-		m_buffer[m_width * m_height - 1] = L'\0';
-		WriteConsoleOutputCharacter(hStdout, m_buffer, m_width * m_height, {0,0}, &m_bytesWritten);
+		DrawBorder();
+		m_buffer[m_width * m_height] = L'\0';
+		WriteConsoleOutputCharacter(hStdout, m_buffer, m_width * m_height + 1, { 0,0 }, &m_bytesWritten);
 	}
 
-	wchar_t Get(int x, int y) { return m_buffer[y * (m_width) + x]; }
+	wchar_t Get(int x, int y) { return m_buffer[y * (m_width)+x]; }
 
-	void Set(wchar_t val, int x, int y) { m_buffer[y * (m_width) + x] = val; }
+	void Set(wchar_t val, int x, int y) { m_buffer[y * (m_width)+x] = val; }
 
 	void ClearBuffer()
 	{
@@ -38,7 +53,44 @@ public:
 		}
 	}
 
+	types::Rectangle GetBounds() const
+	{
+		return m_bounds;
+	}
+
 private:
+	void DrawBorder()
+	{
+		for (int y = 0; y < m_height; ++y)
+		{
+			for (int x = 0; x < m_BORDERWIDTH.x; ++x)
+			{
+				m_buffer[y * m_width + x] = m_SOLIDSHADE;
+			}
+		}
+
+
+		for (int y = 0; y < m_height; ++y)
+		{
+			for (int x = m_width - 1; x >= m_width - m_BORDERWIDTH.x; --x)
+			{
+				m_buffer[y * m_width + x] = m_SOLIDSHADE;
+			}
+		}
+
+		for (int y = m_height - m_BORDERWIDTH.y; y < m_height; ++y)
+		{
+			for (int x = m_BORDERWIDTH.x; x < m_width - m_BORDERWIDTH.x; ++x)
+			{
+				m_buffer[y * m_width + x] = m_SOLIDSHADE;
+			}
+		}
+	}
+private:
+	const Pair<int, int> m_BORDERWIDTH{ 40, 3 };
+	const wchar_t m_SOLIDSHADE = 0x2591;
+
+	types::Rectangle m_bounds;
 	int m_width;
 	int m_height;
 	wchar_t *m_buffer;
