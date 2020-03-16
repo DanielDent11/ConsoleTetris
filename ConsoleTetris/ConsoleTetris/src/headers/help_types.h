@@ -17,7 +17,6 @@ public:
 };
 
 namespace types {
-	typedef Pair<Pair<int, int>, Pair<int, int>> Rectangle;
 	/*
 	3x3 char array
 	Example of Shape:

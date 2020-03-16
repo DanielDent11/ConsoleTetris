@@ -42,8 +42,6 @@ public:
 	virtual Pair<int, int> GetShapeSzie() const override;
 	virtual int GetId() const override;
 	virtual void SetId(int) override;
-	virtual void SetBoundingRect(const types::Rectangle &boundingRect) override;
-	virtual types::Rectangle GetBoundingRect() const override;
 	
 	void SetBuffer(Buffer *);
 	void SetGame(Game *);
@@ -53,7 +51,6 @@ public:
 
 	types::Shape RotateClockwise();
 	types::Shape RotateCounterClockwise();
-	types::Rectangle CalculateBoundingRectByShape(types::Shape shape);
 private:
 	const float m_maxCoolDownForPlayerMove = 0.2f;
 	const float m_maxCoolDownForRotation = 0.3f;
@@ -64,7 +61,6 @@ private:
 
 	Game *m_game;
 	Buffer *m_buffer;
-	types::Rectangle m_boundingRect;
 	types::Bounds m_bounds;
 	Pair<int, int> m_coord;
 	Pair<int, int> m_shapeSize;
@@ -76,5 +72,4 @@ private:
 
 	void MoveDownByGravity();
 	void DecreaseCoolDown(std::chrono::duration<float> &coolDown);
-	void RestrictByBoundingRect();
 };

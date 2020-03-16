@@ -15,6 +15,4 @@ public:
 	virtual void Update() = 0;
 	virtual int GetId() const = 0;
 	virtual void SetId(int) = 0;
-	virtual void SetBoundingRect(const types::Rectangle &boundingRect) = 0;
-	virtual types::Rectangle GetBoundingRect() const = 0;
 };

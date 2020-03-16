@@ -62,22 +62,7 @@ void Game::Spawn()
 	std::mt19937 gen(seed);
 
 	int index = gen() % m_puzzles.size();
-	auto bounds = m_buffer->GetBounds();
-	int width = bounds.y.x - bounds.x.x;
-	int height = bounds.y.y - bounds.x.y;
-
-	int xPos = bounds.x.x + (gen() % width - 1);
-	int yPos = 0;
-	std::cout << xPos << ' ' << yPos << ' ' << index << '\n';;
-	std::cout << m_puzzles.size() << "\n\n";
-
-	IElement *puzzle = m_puzzleBuilder
-		->Build(
-			m_puzzles[index]->GetShape()
-			, Pair<int, int>{xPos, yPos}
-		);
-
-	AddElementToScene(puzzle);
+	
 }
 
 void Game::GameOver()
@@ -111,7 +96,6 @@ void Game::RemovePuzzle(IElement *element)
 void Game::FillMapWithElement(IElement *element)
 {
 	auto coord = element->GetCoord();
-	auto boundingRect = element->GetBoundingRect();
 	auto shape = element->GetShape();
 	auto shapeSize = element->GetShapeSzie();
 

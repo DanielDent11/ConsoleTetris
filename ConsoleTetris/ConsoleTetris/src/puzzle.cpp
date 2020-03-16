@@ -118,35 +118,6 @@ void Puzzle::Move(const Pair<int, int> &move)
 {
 	m_coord.x += move.x;
 	m_coord.y += move.y;
-
-	auto realBoundingRect = m_boundingRect;
-	realBoundingRect.x.x += m_coord.x;
-	realBoundingRect.x.y += m_coord.y;
-	realBoundingRect.y.x += m_coord.x;
-	realBoundingRect.y.y += m_coord.y;
-
-	types::Rectangle mapBounds = m_buffer->GetBounds();
-
-	if (realBoundingRect.x.x < mapBounds.x.x)
-	{
-		m_coord.x = mapBounds.x.x - m_boundingRect.x.x;
-	}
-	if (realBoundingRect.y.x >= mapBounds.y.x)
-	{
-		m_coord.x = mapBounds.y.x - m_boundingRect.y.x - 1;
-	}
-	if (realBoundingRect.x.y < mapBounds.x.y)
-	{
-		m_coord.y = mapBounds.x.y - m_boundingRect.x.y;
-	}
-	if (realBoundingRect.y.y >= mapBounds.y.y)
-	{
-		m_coord.y = mapBounds.y.y - m_boundingRect.y.y - 1;
-		m_game->FillCellsByElement(this);
-		m_game->RemoveElementFromScene(this);
-		m_game->Spawn();
-		delete this;
-	}
 }
 
 void Puzzle::SetShapeSize(const Pair<int, int> &s)
@@ -167,16 +138,6 @@ int Puzzle::GetId() const
 void Puzzle::SetId(int val)
 {
 	m_id = val;
-}
-
-void Puzzle::SetBoundingRect(const types::Rectangle &boundingRect)
-{
-	m_boundingRect = boundingRect;
-}
-
-types::Rectangle Puzzle::GetBoundingRect() const
-{
-	return m_boundingRect;
 }
 
 types::Shape Puzzle::RotateClockwise()
@@ -205,8 +166,6 @@ types::Shape Puzzle::RotateClockwise()
 			m_shape[cy * m_shapeSize.x + cx] = tmp[cny * m_shapeSize.x + cnx];
 		}
 	}
-
-	m_boundingRect = CalculateBoundingRectByShape(m_shape);
 
 	delete[] tmp;
 
@@ -240,36 +199,9 @@ types::Shape Puzzle::RotateCounterClockwise()
 		}
 	}
 
-	m_boundingRect = CalculateBoundingRectByShape(m_shape);
-
 	delete[] tmp;
 
 	return m_shape;
-}
-
-types::Rectangle Puzzle::CalculateBoundingRectByShape(types::Shape shape)
-{
-	int top = m_shapeSize.y;
-	int left = m_shapeSize.x;
-	int right = -m_shapeSize.x;
-	int bottom = -m_shapeSize.y;
-	for (int y = -m_shapeSize.y / 2; y <= m_shapeSize.y / 2; ++y)
-	{
-		for (int x = -m_shapeSize.x / 2; x <= m_shapeSize.x / 2; ++x)
-		{
-			int cx = x + m_shapeSize.x / 2;
-			int cy = y + m_shapeSize.y / 2;
-			if (shape[cy * m_shapeSize.x + cx] == m_buffer->FILLING_SYMBOL)
-			{
-				top = min(top, y);
-				left = min(left, x);
-				right = max(right, x);
-				bottom = max(bottom, y);
-			}
-		}
-	}
-
-	return types::Rectangle{ Pair<int, int>{left, top}, Pair<int, int>{right, bottom} };
 }
 
 void Puzzle::MoveDownByGravity()
@@ -294,32 +226,3 @@ void Puzzle::DecreaseCoolDown(std::chrono::duration<float> &coolDown)
 	}
 }
 
-void Puzzle::RestrictByBoundingRect()
-{
-	auto realBoundingRect = m_boundingRect;
-	realBoundingRect.x.x += m_coord.x;
-	realBoundingRect.x.y += m_coord.y;
-	realBoundingRect.y.x += m_coord.x;
-	realBoundingRect.y.y += m_coord.y;
-
-	types::Rectangle mapBounds = m_buffer->GetBounds();
-
-	if (realBoundingRect.x.x < mapBounds.x.x)
-	{
-		m_coord.x = mapBounds.x.x - m_boundingRect.x.x;
-	}
-	if (realBoundingRect.y.x >= mapBounds.y.x)
-	{
-		m_coord.x = mapBounds.y.x - m_boundingRect.y.x - 1;
-	}
-	if (realBoundingRect.x.y < mapBounds.x.y)
-	{
-		m_coord.y = mapBounds.x.y - m_boundingRect.x.y;
-	}
-	if (realBoundingRect.y.y >= mapBounds.y.y)
-	{
-		m_coord.y = mapBounds.y.y - m_boundingRect.y.y - 1;
-		m_game->FillCellsByElement(this);
-		m_game->RemoveElementFromScene(this);
-	}
-}

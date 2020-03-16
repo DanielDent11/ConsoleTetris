@@ -14,7 +14,6 @@ Puzzle *PuzzleBuilder::Build(
 	p->SetCoord(coord);
 	p->SetShape(shape);
 	p->SetShapeSize(m_shapeSize);
-	p->SetBoundingRect(p->CalculateBoundingRectByShape(shape));
 	p->SetId(m_puzzleCount++);
 	p->SetGame(m_game);
 	++m_puzzleCount;

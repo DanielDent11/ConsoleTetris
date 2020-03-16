@@ -15,11 +15,6 @@ public:
 		m_width(w)
 		, m_height(h)
 	{
-		m_bounds = types::Rectangle 
-			{
-			Pair<int, int>{m_BORDERWIDTH.x, 0}
-			, Pair<int, int>{m_width - m_BORDERWIDTH.x, m_height - m_BORDERWIDTH.y}
-			};
 		hStdout = CreateConsoleScreenBuffer(
 			GENERIC_READ | GENERIC_WRITE
 			, 0
@@ -51,11 +46,6 @@ public:
 				m_buffer[m_width * y + x] = L' ';
 			}
 		}
-	}
-
-	types::Rectangle GetBounds() const
-	{
-		return m_bounds;
 	}
 
 private:
@@ -90,7 +80,6 @@ private:
 	const Pair<int, int> m_BORDERWIDTH{ 40, 3 };
 	const wchar_t m_SOLIDSHADE = 0x2591;
 
-	types::Rectangle m_bounds;
 	int m_width;
 	int m_height;
 	wchar_t *m_buffer;
