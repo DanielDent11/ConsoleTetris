@@ -16,7 +16,8 @@ public:
 	T2 y;
 };
 
-namespace types {
+namespace types
+{
 	/*
 	3x3 char array
 	Example of Shape:
@@ -24,9 +25,9 @@ namespace types {
 	  ###
 	  ...
 	*/
-	typedef wchar_t * Shape;
+	typedef wchar_t *Shape;
 
-	enum Direciton {Top, Right, Bottom, Left};
+	enum Direciton { Top, Right, Bottom, Left };
 
 	struct Bounds
 	{
