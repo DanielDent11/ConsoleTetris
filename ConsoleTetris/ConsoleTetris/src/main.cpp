@@ -1,33 +1,42 @@
-#include <Game.h>
-#include <Buffer.h>
-#include <PuzzleBuilder.h>
-#include <Puzzle.h>
-#include <Pair.h>
+#pragma once 
+
+#include <game.h>
+#include <buffer.h>
+#include <puzzle_builder.h>
+#include <puzzle.h>
+#include <help_types.h>
 
 int main()
 {
 	Buffer buffer(120, 30);
-	PuzzleBuilder puzzleBuilder(&buffer, Pair<int,int>(3, 3));
-	Game game(&puzzleBuilder, Pair<int,int>(90, 30), &buffer);
+	PuzzleBuilder puzzleBuilder(&buffer, Pair<int, int>(3, 3));
+	Game game(&puzzleBuilder, &buffer);
 	puzzleBuilder.SetGame(&game);
 
-	types::Shape shape = new wchar_t[3 * 3];
-	shape[0] = L'.';
-	shape[1] = L'.';
-	shape[2] = L'.';
-	shape[3] = buffer.FILLING_SYMBOL;
-	shape[4] = buffer.FILLING_SYMBOL;
-	shape[5] = L'.';
-	shape[6] = L'.';
-	shape[7] = buffer.FILLING_SYMBOL;
-	shape[8] = L'.';
-	IElement *puzzle = puzzleBuilder
-		.Build(
-			shape
-			, Pair<int, int>{50, 0}
-		);
+	std::vector<help_types::Shape> shapes;
 
-	game.AddPuzzle(puzzle);
+	shapes.push_back(help_types::WStr2Shape(
+	   L"..."
+		"##."
+		".#.", 9));
+	shapes.push_back(help_types::WStr2Shape(
+	   L"..."
+		"###"
+		"...", 9));
+	shapes.push_back(help_types::WStr2Shape(
+	   L".#."
+		"###"
+		"...", 9));
+
+	for (auto shape : shapes)
+	{
+		IElement *puzzle = puzzleBuilder
+			.Build(
+				shape
+				, Pair<int, int>{50, 0}
+		);
+		game.AddPuzzle(puzzle);
+	}
 
 	game.Spawn();
 	game.Run();

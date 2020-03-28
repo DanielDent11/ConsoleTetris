@@ -1,6 +1,8 @@
-#include <Game.h>
-#include <Buffer.h>
-#include <PuzzleBuilder.h>
+#pragma once
+
+#include <game.h>
+#include <buffer.h>
+#include <puzzle_builder.h>
 #include <chrono>
 #include <iostream>
 #include <game_time.h>
@@ -8,14 +10,15 @@
 #include <algorithm>
 #include <random>
 
-Game::Game() {}
+Game::Game() 
+{
+}
 
-Game::Game(IBuilder *puzzleBuilder, const Pair<int, int> &mapSize, Buffer *buffer) :
-	m_puzzleBuilder(puzzleBuilder)
-	, m_mapSize(mapSize)
+Game::Game(IBuilder *puzzleBuilder, Buffer *buffer) :
+	m_gameOver(false)
+	, m_puzzleBuilder(puzzleBuilder)
 	, m_buffer(buffer)
 {
-	m_filledCells = new wchar_t[mapSize.x * mapSize.y];
 }
 
 Game::~Game()
@@ -24,16 +27,23 @@ Game::~Game()
 	{
 		RemoveElementFromScene(puzzle.second);
 	}
-
-	delete[] m_filledCells;
 }
 
 void Game::Run()
 {
 	game_time::Init();
 
+	m_buffer->DrawBorder();
+
 	while (true)
 	{
+		if (m_gameOver)
+		{
+			GameOver();
+		}
+
+		m_elementsToBeRemovedIds.clear();
+
 		// Time update
 		game_time::Update();
 
@@ -41,17 +51,28 @@ void Game::Run()
 		for (auto elem : m_updateables)
 		{
 			elem.second->Update();
+			if (m_gameOver)
+			{
+				break;
+			}
 		}
+
+		if (m_gameOver)
+		{
+			continue;
+		}
+		RemoveElements();
 
 		// Graphics update
 		m_buffer->ClearBuffer();
-		DrawFilledCells();
+		
 
 		for (auto elem : m_drawables)
 		{
 			elem.second->Draw();
 		}
 
+		DeleteFilledRows();
 		m_buffer->Draw();
 	}
 }
@@ -62,12 +83,33 @@ void Game::Spawn()
 	std::mt19937 gen(seed);
 
 	int index = gen() % m_puzzles.size();
+
+	auto boundsX = m_buffer->GetBoundsX();
+	int width = boundsX.y - boundsX.x - 2;
+	int randPosX = (boundsX.x + 1) + (gen() % width);
+
+	auto puzzleTemplate = m_puzzles.at(index);
 	
+	IElement *puzzle = m_puzzleBuilder
+		->Build(
+			puzzleTemplate->GetShape()
+			, Pair<int, int>{randPosX, -puzzleTemplate->GetShapeSize().y}
+	);
+
+	AddElementToScene(puzzle);
 }
 
 void Game::GameOver()
 {
+	int startX = m_buffer->GetBoundsX().x + 10;
+	int startY = m_buffer->GetBoundsY().x + 4;
 
+	const wchar_t *gameOverMessage = L"GAME OVER";
+	for (int i = 0; i < 9; ++i)
+	{
+		m_buffer->Set(gameOverMessage[i], startX + i, startY);
+	}
+	m_buffer->Draw();
 }
 
 void Game::AddElementToScene(IElement *element)
@@ -79,8 +121,7 @@ void Game::AddElementToScene(IElement *element)
 
 void Game::RemoveElementFromScene(IElement *element)
 {
-	m_updateables.erase(element->GetId());
-	m_drawables.erase(element->GetId());
+	m_elementsToBeRemovedIds.push_back(element->GetId());
 }
 
 void Game::AddPuzzle(IElement *element)
@@ -93,71 +134,120 @@ void Game::RemovePuzzle(IElement *element)
 	m_puzzles.erase(std::find(m_puzzles.begin(), m_puzzles.end(), element));
 }
 
-void Game::FillMapWithElement(IElement *element)
+void Game::FillCells(IElement *element)
 {
-	auto coord = element->GetCoord();
-	auto shape = element->GetShape();
-	auto shapeSize = element->GetShapeSzie();
+	auto puzzle = dynamic_cast<Puzzle *>(element);
+	auto shape = puzzle->GetShape();
+	auto center = puzzle->GetCoord();
+	auto shapeSize = puzzle->GetShapeSize();
 
-	for (int y = -shapeSize.y / 2; y <= shapeSize.y; ++y)
-	{
-		for (int x = -shapeSize.x / 2; x <= shapeSize.x; ++x)
-		{
-			int cy = y + shapeSize.y / 2;
-			int cx = x + shapeSize.x / 2;
-
-			if (shape[cy * shapeSize.x + x] == m_buffer->FILLING_SYMBOL)
-			{
-				m_filledCells[(coord.y + y) * m_mapSize.x + (coord.x + x)] = m_buffer->FILLING_SYMBOL;
-			}
-		}
-	}
-}
-
-wchar_t *Game::GetFilledCells() const
-{
-	return m_filledCells;
-}
-
-Pair<int, int> Game::GetMapSize() const
-{
-	return m_mapSize;
-}
-
-void Game::FillCellsByElement(IElement *element)
-{
-	auto coord = element->GetCoord();
-	auto shapeSize = element->GetShapeSzie();
-	auto shape = element->GetShape();
 	for (int y = -shapeSize.y / 2; y <= shapeSize.y / 2; ++y)
 	{
 		for (int x = -shapeSize.x / 2; x <= shapeSize.x / 2; ++x)
 		{
-			int cy = y + shapeSize.y / 2;
 			int cx = x + shapeSize.x / 2;
-			if (shape[cy * shapeSize.x + cx] == m_buffer->FILLING_SYMBOL)
+			int cy = y + shapeSize.y / 2;
+
+			Pair<int, int> coord{ center.x + x, center.y + y };
+
+			auto startY = m_buffer->GetBoundsY().x;
+
+			if (L'#' == shape[cy * shapeSize.x + cx] && coord.y < startY)
 			{
-				int filled_cx = coord.x + x;
-				int filled_cy = coord.y + y;
-				m_filledCells[filled_cy * m_mapSize.x + filled_cx] = m_buffer->FILLING_SYMBOL;
+				m_gameOver = true;
+				return;
+			}
+
+			if (m_buffer->InBounds(coord)
+			&& L'#' == shape[cy * shapeSize.x + cx])
+			{
+				m_buffer->Set(L'*', coord.x, coord.y);
 			}
 		}
 	}
 }
 
-void Game::DrawFilledCells()
+bool Game::IsGameOver() const
 {
-	for (int y = 0; y < m_mapSize.y; ++y)
+	return m_gameOver;
+}
+
+void Game::SetGameOver(bool value)
+{
+	m_gameOver = value;
+}
+
+void Game::RemoveElements()
+{
+	for (auto i : m_elementsToBeRemovedIds)
 	{
-		for (int x = 0; x < m_mapSize.x; ++x)
+		Puzzle *puzzle = dynamic_cast<Puzzle *>(m_updateables[i]);
+		m_updateables.erase(i);
+		m_drawables.erase(i);
+		delete puzzle;
+	}
+}
+
+bool Game::IsRowFilled(int row) const
+{
+	bool res = true;
+	auto start = m_buffer->GetBoundsX().x;
+	auto end = m_buffer->GetBoundsX().y;
+
+	for (int x = start; x < end; ++x)
+	{
+		if (m_buffer->Get(x, row) != '*')
 		{
-			if (m_filledCells[y * m_mapSize.x + x] == m_buffer->FILLING_SYMBOL)
+			res = false;
+		}
+	}
+
+	return res;
+}
+
+void Game::DeleteFilledRows()
+{
+	int startX = m_buffer->GetBoundsX().x;
+	int endX = m_buffer->GetBoundsX().y;
+	int startY = m_buffer->GetBoundsY().x;
+	int endY = m_buffer->GetBoundsY().y;
+
+	int curY = -1;
+	for (int y = endY - 1; y >= startY; --y)
+	{
+		if (IsRowFilled(y))
+		{
+			curY = y;
+			while (curY >= startY && IsRowFilled(curY))
 			{
-				m_buffer->Set(m_buffer->FILLING_SYMBOL, x, y);
+				for (int x = startX; x < endX; ++x)
+				{
+					m_buffer->Set(L' ', x, curY);
+				}
+				--curY;
+			}
+		}
+	}
+
+	if (curY >= startY && curY < endY - 1)
+	{
+		for (int x = startX; x < endX; ++x)
+		{
+			for (int y = curY; y >= startY && m_buffer->Get(x, y) == '*'; --y)
+			{
+				int cy = y + 1;
+				while (cy < endY && m_buffer->Get(x, cy) == L' ')
+				{
+					m_buffer->Set(L' ', x, cy - 1);
+					m_buffer->Set(L'*', x, cy);
+					++cy;
+				}
 			}
 		}
 	}
 }
+
+
 
 
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Buffer.h>
-#include <Puzzle.h>
-#include <Game.h>
+#include <buffer.h>
+#include <puzzle.h>
+#include <game.h>
 
 #include <interfaces/IBuilder.h>
 
@@ -12,7 +12,7 @@ public:
 	PuzzleBuilder(Buffer *buffer, const Pair<int, int> &shapeSize);
 
 	virtual Puzzle *Build(
-		types::Shape shape
+		help_types::Shape shape
 		, const Pair<int, int> &coord) override;
 	virtual void Destroy(IElement *) override;
 

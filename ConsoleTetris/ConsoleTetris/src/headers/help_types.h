@@ -16,7 +16,7 @@ public:
 	T2 y;
 };
 
-namespace types
+namespace help_types
 {
 	/*
 	3x3 char array
@@ -27,13 +27,15 @@ namespace types
 	*/
 	typedef wchar_t *Shape;
 
-	enum Direciton { Top, Right, Bottom, Left };
+	enum Direciton { TOP, LEFT, BOTTOM, Right };
 
-	struct Bounds
+	struct Rectangle
 	{
 		Pair<int, int> top;
 		Pair<int, int> left;
 		Pair<int, int> bottom;
 		Pair<int, int> right;
 	};
+
+	Shape WStr2Shape(const wchar_t *str, int size);
 }

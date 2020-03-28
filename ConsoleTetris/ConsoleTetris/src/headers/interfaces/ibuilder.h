@@ -1,14 +1,14 @@
 #pragma once
 
-#include <Game.h>
+#include <game.h>
 
-#include <interfaces/IElement.h>
+#include <interfaces/ielement.h>
 
 class IBuilder
 {
 public:
 	virtual IElement *Build(
-		types::Shape shape
+		help_types::Shape shape
 		, const Pair<int, int> &coord) = 0;
 	virtual void Destroy(IElement *) = 0;
 };

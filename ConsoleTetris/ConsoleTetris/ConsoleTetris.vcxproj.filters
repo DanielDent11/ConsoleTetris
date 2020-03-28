@@ -5,6 +5,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\puzzle.cpp" />
     <ClCompile Include="src\puzzle_builder.cpp" />
+    <ClCompile Include="src\help_types.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\headers\game_time.h" />
@@ -17,5 +18,6 @@
     <ClInclude Include="src\headers\pair.h" />
     <ClInclude Include="src\headers\puzzle.h" />
     <ClInclude Include="src\headers\puzzle_builder.h" />
+    <ClInclude Include="src\headers\help_types.h" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-#include <PuzzleBuilder.h>
+#include <puzzle_builder.h>
 
 PuzzleBuilder::PuzzleBuilder(Buffer *buffer, const Pair<int, int> &shapeSize) :
 	m_buffer(buffer)
@@ -6,7 +6,7 @@ PuzzleBuilder::PuzzleBuilder(Buffer *buffer, const Pair<int, int> &shapeSize) :
 {}
 
 Puzzle *PuzzleBuilder::Build(
-	types::Shape shape
+	help_types::Shape shape
 	, const Pair<int, int> &coord)
 {
 	Puzzle *p = new Puzzle();
@@ -16,7 +16,6 @@ Puzzle *PuzzleBuilder::Build(
 	p->SetShapeSize(m_shapeSize);
 	p->SetId(m_puzzleCount++);
 	p->SetGame(m_game);
-	++m_puzzleCount;
 
 	return p;
 }

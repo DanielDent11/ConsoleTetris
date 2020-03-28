@@ -155,6 +155,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\game.cpp" />
+    <ClCompile Include="src\help_types.cpp" />
     <ClCompile Include="src\main.cpp">
       <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessToFile>
       <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
@@ -165,6 +166,7 @@
     <ClCompile Include="src\puzzle_builder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\headers\help_types.h" />
     <ClInclude Include="src\headers\buffer.h" />
     <ClInclude Include="src\headers\game.h" />
     <ClInclude Include="src\headers\input.h" />

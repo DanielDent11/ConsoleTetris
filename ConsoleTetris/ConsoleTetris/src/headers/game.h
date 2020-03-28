@@ -1,8 +1,8 @@
 #pragma once
 
-#include <interfaces/IBuilder.h>
-#include <interfaces/IDrawable.h>
-#include <interfaces/IElement.h>
+#include <interfaces/ibuilder.h>
+#include <interfaces/idrawable.h>
+#include <interfaces/ielement.h>
 
 #include <unordered_map>
 #include <memory>
@@ -12,7 +12,7 @@ class Game
 {
 public:
 	Game();
-	Game(IBuilder *puzzleBuilder, const Pair<int, int> &mapSize, Buffer *buffer);
+	Game(IBuilder *puzzleBuilder, Buffer *buffer);
 	~Game();
 
 	void Run();
@@ -25,19 +25,22 @@ public:
 	void AddPuzzle(IElement *element);
 	void RemovePuzzle(IElement *element);
 
-	void FillMapWithElement(IElement *element);
+	void FillCells(IElement *element);
 
-	wchar_t *GetFilledCells() const;
-	Pair<int, int> GetMapSize() const;
-	void FillCellsByElement(IElement *element);
+	bool IsGameOver() const;
+	void SetGameOver(bool value);
 private:
+	bool m_gameOver;
 	IBuilder *m_puzzleBuilder;
-	Pair<int, int> m_mapSize;
+
 	Buffer *m_buffer;
-	wchar_t *m_filledCells;
 	std::vector<IElement *> m_puzzles;
 	std::unordered_map<int, IElement *> m_updateables;
 	std::unordered_map<int, IDrawable *> m_drawables;
 
-	void DrawFilledCells();
+	std::vector<int> m_elementsToBeRemovedIds;
+
+	void RemoveElements();
+	bool IsRowFilled(int row) const;
+	void DeleteFilledRows();
 };

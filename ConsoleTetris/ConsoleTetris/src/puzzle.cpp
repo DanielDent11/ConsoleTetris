@@ -1,8 +1,9 @@
-#include <Puzzle.h>
-#include <Input.h>
+#include <puzzle.h>
+#include <input.h>
 
 #include <iostream>
 #include <cassert>
+#include <stdlib.h>
 
 namespace game_time
 {
@@ -69,6 +70,13 @@ void Puzzle::Update()
 
 void Puzzle::Draw()
 {
+	char *str = new char[4];
+	str[3] = '\0';
+	_itoa_s(m_coord.y, str, 4, 10);
+	for (int i = 0; i < 3; ++i)
+	{
+		m_buffer->Set((wchar_t)str[i], i, 0);
+	}
 	for (int y = -m_shapeSize.y / 2; y <= m_shapeSize.y / 2; ++y)
 	{
 		for (int x = -m_shapeSize.x / 2; x <= m_shapeSize.x / 2; ++x)
@@ -76,31 +84,37 @@ void Puzzle::Draw()
 			int cy = y + m_shapeSize.y / 2;
 			int cx = x + m_shapeSize.x / 2;
 
-			if (m_shape[cy * m_shapeSize.x + cx] == 0x2588)
+			if (m_shape[cy * m_shapeSize.x + cx] == L'#')
 			{
-				m_buffer->Set(0x2588, m_coord.x + x, m_coord.y + y);
+				m_buffer->Set(L'#', m_coord.x + x, m_coord.y + y);
 			}
 		}
 	}
 }
 
-types::Shape Puzzle::GetShape() const { return m_shape; }
+help_types::Shape Puzzle::GetShape() const
+{
+	return m_shape;
+}
 
-void Puzzle::SetBuffer(Buffer *buffer) { m_buffer = buffer; }
+void Puzzle::SetBuffer(Buffer *buffer)
+{
+	m_buffer = buffer;
+}
 
 void Puzzle::SetGame(Game *game)
 {
 	m_game = game;
 }
 
-void Puzzle::SetBounds(types::Bounds &bounds)
+void Puzzle::SetBoundRect(help_types::Rectangle &boundRect)
 {
-	m_bounds = bounds;
+	m_boundRect = boundRect;
 }
 
-types::Bounds Puzzle::GetBounds() const
+help_types::Rectangle Puzzle::GetBoundRect() const
 {
-	return m_bounds;
+	return m_boundRect;
 }
 
 Game *Puzzle::GetGame() const
@@ -108,16 +122,42 @@ Game *Puzzle::GetGame() const
 	return m_game;
 }
 
-void Puzzle::SetShape(types::Shape shape) { m_shape = shape; }
+void Puzzle::SetShape(help_types::Shape shape)
+{
+	m_shape = shape;
+}
 
-Pair<int, int> Puzzle::GetCoord() const { return m_coord; }
+Pair<int, int> Puzzle::GetCoord() const
+{
+	return m_coord;
+}
 
-void Puzzle::SetCoord(const Pair<int, int> &coord) { m_coord = coord; }
+void Puzzle::SetCoord(const Pair<int, int> &coord)
+{
+	m_coord = coord;
+}
 
 void Puzzle::Move(const Pair<int, int> &move)
 {
-	m_coord.x += move.x;
-	m_coord.y += move.y;
+	auto coord = m_coord;
+	coord.x += move.x;
+	coord.y += move.y;
+
+	if (SufficeConstraints(m_shape, coord))
+	{
+		m_coord.x += move.x;
+		m_coord.y += move.y;
+	}
+	else
+	{
+		if (move.y > 0 && m_isAlive)
+		{
+			m_isAlive = false;
+			m_game->FillCells(this);
+			m_game->RemoveElementFromScene(this);
+			m_game->Spawn();
+		}
+	}
 }
 
 void Puzzle::SetShapeSize(const Pair<int, int> &s)
@@ -125,7 +165,7 @@ void Puzzle::SetShapeSize(const Pair<int, int> &s)
 	m_shapeSize = s;
 }
 
-Pair<int, int> Puzzle::GetShapeSzie() const
+Pair<int, int> Puzzle::GetShapeSize() const
 {
 	return m_shapeSize;
 }
@@ -140,39 +180,10 @@ void Puzzle::SetId(int val)
 	m_id = val;
 }
 
-types::Shape Puzzle::RotateClockwise()
-{
-	wchar_t *tmp = new wchar_t[m_shapeSize.x * m_shapeSize.y];
-	for (int i = 0; i < m_shapeSize.x * m_shapeSize.y; ++i)
-	{
-		tmp[i] = m_shape[i];
-	}
+void Puzzle::CalculateBoundRectByShape(help_types::Shape)
+{}
 
-	for (int y = -m_shapeSize.y / 2; y <= m_shapeSize.y / 2; ++y)
-	{
-		for (int x = -m_shapeSize.x / 2; x <= m_shapeSize.x / 2; ++x)
-		{
-			int cx = x + m_shapeSize.x / 2;
-			int cy = y + m_shapeSize.y / 2;
-
-			int nx = -y;
-			int ny = x;
-
-			int cnx = nx + m_shapeSize.x / 2;
-			int cny = ny + m_shapeSize.y / 2;
-
-			std::cout << cx << ' ' << cy << ' ' << cnx << ' ' << cny << '\n';
-
-			m_shape[cy * m_shapeSize.x + cx] = tmp[cny * m_shapeSize.x + cnx];
-		}
-	}
-
-	delete[] tmp;
-
-	return m_shape;
-}
-
-types::Shape Puzzle::RotateCounterClockwise()
+help_types::Shape Puzzle::RotateClockwise()
 {
 	wchar_t *tmp = new wchar_t[m_shapeSize.x * m_shapeSize.y];
 	for (int i = 0; i < m_shapeSize.x * m_shapeSize.y; ++i)
@@ -195,8 +206,64 @@ types::Shape Puzzle::RotateCounterClockwise()
 
 			std::cout << cx << ' ' << cy << ' ' << cnx << ' ' << cny << '\n';
 
-			m_shape[cy * m_shapeSize.x + cx] = tmp[cny * m_shapeSize.x + cnx];
+			tmp[cy * m_shapeSize.x + cx] = m_shape[cny * m_shapeSize.x + cnx];
+			if (L'#' == tmp[cy * m_shapeSize.x + cx])
+			{
+				if (!IsFree(Pair<int, int>{m_coord.x + x, m_coord.y + y}))
+				{
+					return m_shape;
+				}
+			}
 		}
+	}
+
+	for (int i = 0; i < m_shapeSize.x * m_shapeSize.y; ++i)
+	{
+		m_shape[i] = tmp[i];
+	}
+
+	delete[] tmp;
+
+	return m_shape;
+}
+
+help_types::Shape Puzzle::RotateCounterClockwise()
+{
+	wchar_t *tmp = new wchar_t[m_shapeSize.x * m_shapeSize.y];
+	for (int i = 0; i < m_shapeSize.x * m_shapeSize.y; ++i)
+	{
+		tmp[i] = m_shape[i];
+	}
+
+	for (int y = -m_shapeSize.y / 2; y <= m_shapeSize.y / 2; ++y)
+	{
+		for (int x = -m_shapeSize.x / 2; x <= m_shapeSize.x / 2; ++x)
+		{
+			int cx = x + m_shapeSize.x / 2;
+			int cy = y + m_shapeSize.y / 2;
+
+			int nx = -y;
+			int ny = x;
+
+			int cnx = nx + m_shapeSize.x / 2;
+			int cny = ny + m_shapeSize.y / 2;
+
+			std::cout << cx << ' ' << cy << ' ' << cnx << ' ' << cny << '\n';
+
+			tmp[cy * m_shapeSize.x + cx] = m_shape[cny * m_shapeSize.x + cnx];
+			if (L'#' == tmp[cy * m_shapeSize.x + cx])
+			{
+				if (!IsFree(Pair<int, int>{m_coord.x + x, m_coord.y + y}))
+				{
+					return m_shape;
+				}
+			}
+		}
+	}
+
+	for (int i = 0; i < m_shapeSize.x * m_shapeSize.y; ++i)
+	{
+		m_shape[i] = tmp[i];
 	}
 
 	delete[] tmp;
@@ -224,5 +291,47 @@ void Puzzle::DecreaseCoolDown(std::chrono::duration<float> &coolDown)
 	{
 		coolDown = std::chrono::duration<float>::zero();
 	}
+}
+
+bool Puzzle::SufficeConstraints(help_types::Shape shape, Pair<int, int> center) const
+{
+	for (int y = -m_shapeSize.y / 2; y <= m_shapeSize.y / 2; ++y)
+	{
+		for (int x = -m_shapeSize.x / 2; x <= m_shapeSize.x / 2; ++x)
+		{
+			int cx = x + m_shapeSize.x / 2;
+			int cy = y + m_shapeSize.y / 2;
+
+			if (shape[cy * m_shapeSize.x + cx] == '#')
+			{
+				Pair<int, int> coord{ center.x + x, center.y + y };
+				if (!InBounds(coord) || !IsFree(coord))
+				{
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+bool Puzzle::InBounds(Pair<int, int> coord) const
+{
+	auto boundsX = m_buffer->GetBoundsX();
+	auto boundsY = m_buffer->GetBoundsY();
+
+	return (coord.x >= boundsX.x && coord.x < boundsX.y
+		&& coord.y < boundsY.y);
+}
+
+bool Puzzle::IsFree(Pair<int, int> coord) const
+{
+	if (coord.y < m_buffer->GetBoundsY().x)
+	{
+		return true;
+	}
+	wchar_t c = m_buffer->Get(coord.x, coord.y);
+	return (c != 'b' && c != '*');
 }
 
