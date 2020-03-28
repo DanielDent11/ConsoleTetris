@@ -6,11 +6,13 @@
 #include <chrono>
 #include <iostream>
 #include <game_time.h>
+#include <mainpage.h>
 
 #include <algorithm>
 #include <random>
+#include <string>
 
-Game::Game() 
+Game::Game()
 {
 }
 
@@ -19,6 +21,12 @@ Game::Game(IBuilder *puzzleBuilder, Buffer *buffer) :
 	, m_puzzleBuilder(puzzleBuilder)
 	, m_buffer(buffer)
 {
+	m_isInGame = false;
+	m_playerStats = Pair<std::string, int>{ "Player", 0 };
+
+	m_mainPage = new MainPage(buffer, this);
+
+	m_currentPage = dynamic_cast<IPage *>(m_mainPage);
 }
 
 Game::~Game()
@@ -27,55 +35,84 @@ Game::~Game()
 	{
 		RemoveElementFromScene(puzzle.second);
 	}
+	RemoveElements();
+
+	delete m_mainPage;
 }
 
 void Game::Run()
 {
-	game_time::Init();
-
-	m_buffer->DrawBorder();
-
 	while (true)
 	{
-		if (m_gameOver)
+		if (!m_isInGame)
 		{
-			GameOver();
+			m_buffer->ClearBuffer(true);
+			m_currentPage->Update();
+			if (m_isInGame)
+				continue;
+			m_currentPage->Draw();
 		}
-
-		m_elementsToBeRemovedIds.clear();
-
-		// Time update
-		game_time::Update();
-
-		// State update
-		for (auto elem : m_updateables)
+		else
 		{
-			elem.second->Update();
+			m_elementsToBeRemovedIds.clear();
+
+			if (Input::GetKeyDown(ESC))
+			{
+				m_buffer->ClearBuffer(true);
+				m_isInGame = false;
+				for (auto elem : m_updateables)
+				{
+					m_elementsToBeRemovedIds.push_back(elem.first);
+				}
+				RemoveElements();
+
+				m_buffer->ClearBuffer(true);
+				continue;
+			}
+
 			if (m_gameOver)
 			{
-				break;
+				GameOver();
 			}
-		}
 
-		if (m_gameOver)
-		{
-			continue;
-		}
-		RemoveElements();
+			
+			// Time update
+			game_time::Update();
 
-		// Graphics update
-		m_buffer->ClearBuffer();
-		
+			// State update
+			for (auto elem : m_updateables)
+			{
+				elem.second->Update();
+				if (m_gameOver)
+				{
+					break;
+				}
+			}
+			DrawPlayerInfo();
 
-		for (auto elem : m_drawables)
-		{
-			elem.second->Draw();
-		}
+			if (m_gameOver)
+			{
+				continue;
+			}
+			RemoveElements();
 
-		DeleteFilledRows();
+			// Graphics update
+			m_buffer->ClearBuffer();
+
+
+			for (auto elem : m_drawables)
+			{
+				elem.second->Draw();
+			}
+
+			DeleteFilledRows();
+		} // else!
+
 		m_buffer->Draw();
-	}
-}
+
+	} // while!
+
+} // Run!
 
 void Game::Spawn()
 {
@@ -89,7 +126,7 @@ void Game::Spawn()
 	int randPosX = (boundsX.x + 1) + (gen() % width);
 
 	auto puzzleTemplate = m_puzzles.at(index);
-	
+
 	IElement *puzzle = m_puzzleBuilder
 		->Build(
 			puzzleTemplate->GetShape()
@@ -101,13 +138,15 @@ void Game::Spawn()
 
 void Game::GameOver()
 {
-	int startX = m_buffer->GetBoundsX().x + 10;
-	int startY = m_buffer->GetBoundsY().x + 4;
+	m_buffer->ClearBuffer(true);
 
-	const wchar_t *gameOverMessage = L"GAME OVER";
-	for (int i = 0; i < 9; ++i)
+	const int GameOverOffsetX = 42;
+	const int GameOverOffsetY = 11;
+	
+	std::string  gameOverMessage = "GAME OVER(press ESC to quit to the main menu)";
+	for (int i = 0; i < gameOverMessage.length(); ++i)
 	{
-		m_buffer->Set(gameOverMessage[i], startX + i, startY);
+		m_buffer->Set((wchar_t)gameOverMessage[i], GameOverOffsetX + i, GameOverOffsetY);
 	}
 	m_buffer->Draw();
 }
@@ -159,7 +198,7 @@ void Game::FillCells(IElement *element)
 			}
 
 			if (m_buffer->InBounds(coord)
-			&& L'#' == shape[cy * shapeSize.x + cx])
+				&& L'#' == shape[cy * shapeSize.x + cx])
 			{
 				m_buffer->Set(L'*', coord.x, coord.y);
 			}
@@ -175,6 +214,20 @@ bool Game::IsGameOver() const
 void Game::SetGameOver(bool value)
 {
 	m_gameOver = value;
+}
+
+void Game::SetCurrentPage(IPage *value)
+{
+	m_currentPage = value;
+}
+
+void Game::StartGame()
+{
+	game_time::Init();
+	m_buffer->ClearBuffer(true);
+	m_buffer->DrawBorder();
+	Spawn();
+	m_isInGame = true;
 }
 
 void Game::RemoveElements()
@@ -224,6 +277,7 @@ void Game::DeleteFilledRows()
 				{
 					m_buffer->Set(L' ', x, curY);
 				}
+				m_playerStats.y += ScoresForRow;
 				--curY;
 			}
 		}
@@ -244,6 +298,18 @@ void Game::DeleteFilledRows()
 				}
 			}
 		}
+	}
+}
+
+void Game::DrawPlayerInfo()
+{
+	const int offsetX = -10;
+	const int offsetY = 1;
+
+	std::string str = m_playerStats.x + ": " + std::to_string(m_playerStats.y);
+	for (int i = 0; i < str.length(); ++i)
+	{
+		m_buffer->Set(str[i], m_buffer->GetBoundsX().x + offsetX + i, offsetY);
 	}
 }
 

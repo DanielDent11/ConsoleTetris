@@ -66,13 +66,13 @@ public:
 		m_buffer[y * (m_width) + x] = val;
 	}
 
-	void ClearBuffer()
+	void ClearBuffer(bool all = false)
 	{
 		for (int y = 0; y < m_height; ++y)
 		{
 			for (int x = 0; x < m_width; ++x)
 			{
-				if (m_buffer[m_width * y + x] == L'#')
+				if (all || m_buffer[m_width * y + x] == L'#' || m_buffer[m_width * y + x] == L'>')
 				{
 					m_buffer[m_width * y + x] = L' ';
 				}

@@ -3,10 +3,12 @@
 #include <interfaces/ibuilder.h>
 #include <interfaces/idrawable.h>
 #include <interfaces/ielement.h>
+#include <interfaces/ipage.h>
 
 #include <unordered_map>
 #include <memory>
 
+class MainPage;
 class Buffer;
 class Game
 {
@@ -29,7 +31,21 @@ public:
 
 	bool IsGameOver() const;
 	void SetGameOver(bool value);
+
+	void SetCurrentPage(IPage *value);
+	void StartGame();
 private:
+	const int ESC = 27;
+
+	const int ScoresForRow = 5;
+
+	Pair<std::string, int> m_playerStats;
+	bool m_isInGame;
+
+	IPage *m_currentPage;
+
+	MainPage *m_mainPage;
+
 	bool m_gameOver;
 	IBuilder *m_puzzleBuilder;
 
@@ -43,4 +59,5 @@ private:
 	void RemoveElements();
 	bool IsRowFilled(int row) const;
 	void DeleteFilledRows();
+	void DrawPlayerInfo();
 };

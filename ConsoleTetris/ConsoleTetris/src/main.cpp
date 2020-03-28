@@ -38,7 +38,6 @@ int main()
 		game.AddPuzzle(puzzle);
 	}
 
-	game.Spawn();
 	game.Run();
 
 	return 0;

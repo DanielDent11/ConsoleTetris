@@ -173,6 +173,9 @@
     <ClInclude Include="src\headers\interfaces\ibuilder.h" />
     <ClInclude Include="src\headers\interfaces\idrawable.h" />
     <ClInclude Include="src\headers\interfaces\ielement.h" />
+    <ClInclude Include="src\headers\interfaces\ipage.h" />
+    <ClInclude Include="src\headers\interfaces\iupdateable.h" />
+    <ClInclude Include="src\headers\mainpage.h" />
     <ClInclude Include="src\headers\pair.h" />
     <ClInclude Include="src\headers\puzzle.h" />
     <ClInclude Include="src\headers\puzzle_builder.h" />

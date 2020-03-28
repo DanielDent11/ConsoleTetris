@@ -70,13 +70,6 @@ void Puzzle::Update()
 
 void Puzzle::Draw()
 {
-	char *str = new char[4];
-	str[3] = '\0';
-	_itoa_s(m_coord.y, str, 4, 10);
-	for (int i = 0; i < 3; ++i)
-	{
-		m_buffer->Set((wchar_t)str[i], i, 0);
-	}
 	for (int y = -m_shapeSize.y / 2; y <= m_shapeSize.y / 2; ++y)
 	{
 		for (int x = -m_shapeSize.x / 2; x <= m_shapeSize.x / 2; ++x)
