@@ -27,7 +27,8 @@ namespace help_types
 	*/
 	typedef wchar_t *Shape;
 
-	enum Direciton { TOP, LEFT, BOTTOM, Right };
+	enum Direciton { Top, Left, Bottom, Right };
+	enum ValidateResult { Correct = 0, Error, NotCorrect, NotExists, Exists };
 
 	struct Rectangle
 	{

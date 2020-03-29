@@ -197,8 +197,6 @@ help_types::Shape Puzzle::RotateClockwise()
 			int cnx = nx + m_shapeSize.x / 2;
 			int cny = ny + m_shapeSize.y / 2;
 
-			std::cout << cx << ' ' << cy << ' ' << cnx << ' ' << cny << '\n';
-
 			tmp[cy * m_shapeSize.x + cx] = m_shape[cny * m_shapeSize.x + cnx];
 			if (L'#' == tmp[cy * m_shapeSize.x + cx])
 			{
@@ -240,8 +238,6 @@ help_types::Shape Puzzle::RotateCounterClockwise()
 
 			int cnx = nx + m_shapeSize.x / 2;
 			int cny = ny + m_shapeSize.y / 2;
-
-			std::cout << cx << ' ' << cy << ' ' << cnx << ' ' << cny << '\n';
 
 			tmp[cy * m_shapeSize.x + cx] = m_shape[cny * m_shapeSize.x + cnx];
 			if (L'#' == tmp[cy * m_shapeSize.x + cx])

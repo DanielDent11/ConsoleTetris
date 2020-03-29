@@ -7,26 +7,43 @@
 #include <iostream>
 #include <game_time.h>
 #include <mainpage.h>
+#include <registerpage.h>
+#include <loginpage.h>
 
 #include <algorithm>
 #include <random>
 #include <string>
+#include <iostream>
+#include <cstdlib>
+// for <streamsize> 
+#include<ios>      
+// for numeric_limits 
+#include<limits>
+
+#undef max
 
 Game::Game()
 {
 }
 
-Game::Game(IBuilder *puzzleBuilder, Buffer *buffer) :
+Game::Game(IBuilder *puzzleBuilder, Buffer *buffer, DataBase *dataBase) :
 	m_gameOver(false)
 	, m_puzzleBuilder(puzzleBuilder)
+	, m_dataBase(dataBase)
 	, m_buffer(buffer)
 {
 	m_isInGame = false;
+	m_isInLogin = false;
+	m_isInRegister = false;
+
 	m_playerStats = Pair<std::string, int>{ "Player", 0 };
+	m_loginInfo = Pair<std::string, std::string>{ "", "" };
 
 	m_mainPage = new MainPage(buffer, this);
-
-	m_currentPage = dynamic_cast<IPage *>(m_mainPage);
+	m_registerPage = new RegisterPage(buffer, this);
+	m_loginPage = new LoginPage(buffer, this);
+	
+	m_currentPage = ToIPage(m_mainPage);
 }
 
 Game::~Game()
@@ -44,7 +61,8 @@ void Game::Run()
 {
 	while (true)
 	{
-		if (!m_isInGame)
+		m_buffer->ClearBuffer(true);
+		if (!m_isInGame && !m_isInLogin && !m_isInRegister)
 		{
 			m_buffer->ClearBuffer(true);
 			m_currentPage->Update();
@@ -52,7 +70,7 @@ void Game::Run()
 				continue;
 			m_currentPage->Draw();
 		}
-		else
+		else if (m_isInGame)
 		{
 			m_elementsToBeRemovedIds.clear();
 
@@ -106,7 +124,23 @@ void Game::Run()
 			}
 
 			DeleteFilledRows();
-		} // else!
+		}
+		else if (m_isInLogin)
+		{
+		/*	m_buffer->ClearBuffer(true);
+			m_buffer->Draw();
+			Login();
+			m_isInLogin = false;*/
+		} 
+		else if (m_isInRegister)
+		{
+			/*m_buffer->ClearBuffer(true);
+			m_buffer->Draw();
+			Register();
+			m_isInRegister = false;
+			IPage *p = dynamic_cast<IPage *>(m_mainPage);
+			SetCurrentPage(p);*/
+		}
 
 		m_buffer->Draw();
 
@@ -227,7 +261,25 @@ void Game::StartGame()
 	m_buffer->ClearBuffer(true);
 	m_buffer->DrawBorder();
 	Spawn();
+	m_playerStats.y = 0;
+	m_gameOver = false;
 	m_isInGame = true;
+	m_buffer->Draw();
+}
+
+IPage *Game::ToIPage(MainPage *mainPage)
+{
+	return dynamic_cast<IPage *>(mainPage);
+}
+
+IPage *Game::ToIPage(LoginPage *loginPage)
+{
+	return dynamic_cast<IPage *>(loginPage);
+}
+
+IPage *Game::ToIPage(RegisterPage *registerPage)
+{
+	return dynamic_cast<IPage *>(registerPage);
 }
 
 void Game::RemoveElements()
@@ -311,6 +363,185 @@ void Game::DrawPlayerInfo()
 	{
 		m_buffer->Set(str[i], m_buffer->GetBoundsX().x + offsetX + i, offsetY);
 	}
+}
+
+bool Game::Register()
+{
+	string username;
+	string email;
+	string password;
+	GetDataFromUserRegister(username, email, password);
+
+	const std::string query = 
+						 "INSERT INTO `users` (`ID`, `username`, `e-mail`, `password`, `score`) "
+						 "VALUES (NULL, '" + username + "', '" + email + "', '" + password +"', '0')";
+	try
+	{
+		m_dataBase->ExecuteUpdate(query);
+	}
+	catch(sql::SQLException &e)
+	{
+		return false;
+	}
+
+	std::cout << "Success\nPress ESC to go to the main menu";
+
+	return true;
+}
+
+bool Game::Login()
+{
+	string username;
+	string email;
+	string password;
+	
+	GetDataFromUserLogin(username, email, password);
+
+	m_playerStats.x = username;
+	m_loginInfo.x = email;
+	m_loginInfo.y = password;
+
+	std::cin.clear();
+	std::cin.ignore(10000, '\n');
+	std::cout << "Logged in succuseful.\nPress ESC to go the main menu";
+	m_buffer->ClearBuffer(true);
+	m_buffer->Draw();
+	return true;
+}
+
+help_types::ValidateResult Game::ValidateEnteredData(
+	std::string username
+	, std::string email
+	, std::string password)
+{
+	const std::string query =
+		"SELECT * "
+		"FROM `users`"
+		"WHERE `username` = '" + username + "'";
+
+	sql::ResultSet *res = nullptr;
+	try
+	{
+		res = m_dataBase->ExecuteQuery(query);
+	}
+	catch (sql::SQLException &e)
+	{
+		delete res;
+		return help_types::ValidateResult::Error;
+	}
+
+	while (res->next())
+	{
+		std::string _email = res->getString("e-mail");
+		std::string _password = res->getString("password");
+
+		if (email != _email || password != _password)
+		{
+			delete res;
+			return help_types::ValidateResult::NotCorrect;
+		}
+		else
+		{
+			delete res;
+			return help_types::ValidateResult::Correct;
+		}
+	}
+
+	delete res;
+	return help_types::ValidateResult::NotExists;
+}
+
+help_types::ValidateResult Game::ValidateExistance(std::string username, std::string email)
+{
+	const std::string queryUsername =
+		"SELECT * "
+		"FROM `users`"
+		"WHERE `username` = '" + username + "'";
+	const std::string queryEmail =
+		"SELECT * "
+		"FROM `users`"
+		"WHERE `username` = '" + username + "'";
+
+	sql::ResultSet *res = nullptr;
+
+	try
+	{
+		res = m_dataBase->ExecuteQuery(queryUsername);
+	}
+	catch (sql::SQLException &e)
+	{
+		delete res;
+		return help_types::ValidateResult::Error;
+	}
+
+	if (res->next())
+	{
+		std::cout << "A user with such username already exists\n";
+		delete res;
+		return help_types::ValidateResult::Exists;
+	}
+
+	try
+	{
+		delete res;
+		res = m_dataBase->ExecuteQuery(queryEmail);
+	}
+	catch (sql::SQLException &e)
+	{
+		delete res;
+		return help_types::ValidateResult::Error;
+	}
+
+	if (res->next())
+	{
+		std::cout << "A user with such email already exists\n";
+		delete res;
+		return help_types::ValidateResult::Exists;
+	}
+
+	delete res;
+	return help_types::ValidateResult::NotExists;
+}
+
+void Game::GetDataFromUserRegister(std::string &username, std::string &email, std::string &password)
+{
+	const string _username = "username";
+	const string _email = "e-mail";
+	const string _password = "password";
+
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), COORD{ (SHORT)_username.length() + 1, 0 });
+	std::cin >> username;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), COORD{ (SHORT)_email.length() + 1, 1 });
+	std::cin >> email;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), COORD{ (SHORT)_password.length() + 1, 2 });
+	std::cin >> password;
+
+	if (ValidateExistance(username, email) != help_types::ValidateResult::NotExists)
+	{
+		std::cout << "Please, try again\n";
+		GetDataFromUserRegister(username, email, password);
+	}
+}
+
+void Game::GetDataFromUserLogin(std::string &username, std::string &email, std::string &password)
+{
+	const string _username = "username";
+	const string _email = "e-mail";
+	const string _password = "password";
+
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), COORD{ (SHORT)_username.length() + 1, 0 });
+	std::cin >> username;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), COORD{ (SHORT)_email.length() + 1, 1 });
+	std::cin >> email;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), COORD{ (SHORT)_password.length() + 1, 2 });
+	std::cin >> password;
+
+	if (ValidateEnteredData(username, email, password) != help_types::ValidateResult::Correct)
+	{
+		std::cout << "Incorrect, try again\n";
+		GetDataFromUserLogin(username, email, password);
+	}
+	return;
 }
 
 

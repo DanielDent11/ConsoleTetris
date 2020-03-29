@@ -5,12 +5,20 @@
 #include <puzzle_builder.h>
 #include <puzzle.h>
 #include <help_types.h>
+#include <database.h>
+
+#include <iostream>
+#include <ios>
+#include <limits>
+
+#undef max
 
 int main()
 {
 	Buffer buffer(120, 30);
 	PuzzleBuilder puzzleBuilder(&buffer, Pair<int, int>(3, 3));
-	Game game(&puzzleBuilder, &buffer);
+	DataBase dataBase;
+	Game game(&puzzleBuilder, &buffer, &dataBase);
 	puzzleBuilder.SetGame(&game);
 
 	std::vector<help_types::Shape> shapes;

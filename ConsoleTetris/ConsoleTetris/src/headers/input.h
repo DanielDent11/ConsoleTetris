@@ -7,6 +7,6 @@ class Input
 public:
 	static bool GetKeyDown(unsigned short key)
 	{
-		return (GetAsyncKeyState(key) & 0x8000);
+		return (GetAsyncKeyState(key) & 0x0001);
 	}
 };

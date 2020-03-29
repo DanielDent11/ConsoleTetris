@@ -128,12 +128,16 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessToFile>false</PreprocessToFile>
+      <AdditionalIncludeDirectories>C:\Program Files\boost_1_62_0;C:\MySQL\Connector C++ 8.0\include\jdbc;C:\MySQL\Connector C++ 8.0\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\MySQL\Connector C++ 8.0\lib64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>C:\MySQL\Connector C++ 8.0\lib64\vs14\mysqlcppconn.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -145,16 +149,22 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessToFile>false</PreprocessToFile>
+      <AdditionalIncludeDirectories>C:\Program Files\boost_1_62_0;C:\MySQL\Connector C++ 8.0\include\jdbc;C:\MySQL\Connector C++ 8.0\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\MySQL\Connector C++ 8.0\lib64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>C:\MySQL\Connector C++ 8.0\lib64\vs14\mysqlcppconn.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\game.cpp" />
+    <ClCompile Include="src\registerpage.cpp" />
+    <ClCompile Include="src\loginpage.cpp" />
     <ClCompile Include="src\help_types.cpp" />
     <ClCompile Include="src\main.cpp">
       <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessToFile>
@@ -166,6 +176,7 @@
     <ClCompile Include="src\puzzle_builder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\headers\database.h" />
     <ClInclude Include="src\headers\help_types.h" />
     <ClInclude Include="src\headers\buffer.h" />
     <ClInclude Include="src\headers\game.h" />
@@ -175,11 +186,13 @@
     <ClInclude Include="src\headers\interfaces\ielement.h" />
     <ClInclude Include="src\headers\interfaces\ipage.h" />
     <ClInclude Include="src\headers\interfaces\iupdateable.h" />
+    <ClInclude Include="src\headers\loginpage.h" />
     <ClInclude Include="src\headers\mainpage.h" />
     <ClInclude Include="src\headers\pair.h" />
     <ClInclude Include="src\headers\puzzle.h" />
     <ClInclude Include="src\headers\puzzle_builder.h" />
     <ClInclude Include="src\headers\game_time.h" />
+    <ClInclude Include="src\headers\registerpage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

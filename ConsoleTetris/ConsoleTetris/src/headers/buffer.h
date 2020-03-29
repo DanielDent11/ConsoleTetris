@@ -13,6 +13,7 @@ class Buffer : IDrawable
 {
 public:
 	const wchar_t FILLING_SYMBOL = 0x2588;
+	DWORD MODE;
 public:
 	Buffer(int w, int h) :
 		m_width(w)
@@ -24,12 +25,14 @@ public:
 		m_boundsY.x = 0;
 		m_boundsY.y = m_height - m_BORDERWIDTH.y;
 
-		hStdout = CreateConsoleScreenBuffer(
+	/*	hStdout = CreateConsoleScreenBuffer(
 			GENERIC_READ | GENERIC_WRITE
 			, 0
 			, NULL
 			, CONSOLE_TEXTMODE_BUFFER
-			, NULL);
+			, NULL);*/
+
+		hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleActiveScreenBuffer(hStdout);
 		m_buffer = new wchar_t[m_width * m_height + 1];
 		for (int i = 0; i < m_width * m_height + 1; ++i)
@@ -125,6 +128,16 @@ public:
 				m_buffer[y * m_width + x] = L'b';
 			}
 		}
+	}
+
+	void SwitchToStdBuffer()
+	{
+		SetConsoleActiveScreenBuffer(GetStdHandle(STD_OUTPUT_HANDLE));
+	}
+
+	void SwitchToRenderBuffer()
+	{
+		SetConsoleActiveScreenBuffer(hStdout);
 	}
 
 private:

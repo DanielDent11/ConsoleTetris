@@ -6,6 +6,8 @@
     <ClCompile Include="src\puzzle.cpp" />
     <ClCompile Include="src\puzzle_builder.cpp" />
     <ClCompile Include="src\help_types.cpp" />
+    <ClCompile Include="src\loginpage.cpp" />
+    <ClCompile Include="src\registerpage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\headers\game_time.h" />
@@ -22,5 +24,8 @@
     <ClInclude Include="src\headers\mainpage.h" />
     <ClInclude Include="src\headers\interfaces\iupdateable.h" />
     <ClInclude Include="src\headers\interfaces\ipage.h" />
+    <ClInclude Include="src\headers\database.h" />
+    <ClInclude Include="src\headers\registerpage.h" />
+    <ClInclude Include="src\headers\loginpage.h" />
   </ItemGroup>
 </Project>
